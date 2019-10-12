@@ -1,11 +1,15 @@
-import sys
+import io, shutil, sys
 from PIL import Image, ImageChops, ImageFilter
 
-def squarify(filename):
-    content = Image.open(filename)
+def squarify(in_fp):
+    content = Image.open(in_fp)
     background = get_background(content)
-    print(background.size)
-    return paste_center(content, background)
+    squared = paste_center(content, background)
+
+    vfile = io.BytesIO()
+    squared.save(vfile, 'JPEG')
+    vfile.seek(0)
+    return vfile
 
 def get_background(content):
     r'''
@@ -60,5 +64,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage: ./image.py <input_image> <output_name>')
         sys.exit(1)
-    with open(sys.argv[2], 'w') as outfile:
-        squarify(sys.argv[1]).save(outfile, 'JPEG')
+
+    with open(sys.argv[2], 'wb') as outfile:
+        shutil.copyfileobj(squarify(sys.argv[1]), outfile)
+
